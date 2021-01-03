@@ -75,6 +75,28 @@ function textboxWriteAnimated(str) {
     }, speed ? 10 : 500)
 }
 
+function textboxWriteAnimatedWithChoices(str, choices) {
+    const newText = document.createElement('p');
+    const currentText = document.getElementById("centerText");
+    const textContainer = document.getElementById("centerTextContainer");
+    newText.className = "fadingin";
+    var body = str + "<div id='inline-choice-container'>";
+    for (choice of choices) {
+        body += `<input type='image' src='${choice.src}' onclick='${choice.func}'>`;
+    }
+    body += "</div>";
+    newText.innerHTML = body;
+    newText.id = "centerText";
+    currentText.classList.add(["fadingout"]);
+    textContainer.classList.add(["centerTextContainerTransitioning"]);
+    textContainer.appendChild(newText);
+    setTimeout(() => {
+        textContainer.removeChild(currentText);
+        textContainer.classList.remove(["centerTextContainerTransitioning"]);
+        document.getElementById("centerText").classList.remove(["fadingin"]);
+    }, speed ? 10 : 500)
+}
+
 var speed;
 
 window.onload = () => {
@@ -214,51 +236,54 @@ function buildPhase1() {
                                                                                                                                                     profilePictureContainer.appendChild(profilePicture);
                                                                                                                                                     vertContainer.insertBefore(profilePictureContainer, document.getElementById("centerTextContainer"));
                                                                                                                                                     setTimeout(() => {
-                                                                                                                                                        textboxWriteAnimated("Hmm, I should probably put my name somewhere.");
+                                                                                                                                                        textboxWriteAnimated("Yup, haven't picked one yet. I'm pretty indecisive about things like this.");
                                                                                                                                                         setTimeout(() => {
-                                                                                                                                                            const headingContainer = document.createElement('div');
-                                                                                                                                                            headingContainer.id = "headingContainer";
-                                                                                                                                                            const heading = document.createElement('h1');
-                                                                                                                                                            heading.id = "heading";
-                                                                                                                                                            heading.innerHTML = "Beckett O'Brien";
-                                                                                                                                                            headingContainer.appendChild(heading);
-                                                                                                                                                            vertContainer.insertBefore(headingContainer, profilePictureContainer);
-                                                                                                                                                            document.styleSheets.item(0).addRule("#vert-container", "height: 90vh;");
+                                                                                                                                                            textboxWriteAnimated("I also want to pick a nickname or something, but I can't decide on something so right now I just use my real name.");
                                                                                                                                                             setTimeout(() => {
-                                                                                                                                                                textboxWriteAnimated("Let me grab a better font real quick...");
+                                                                                                                                                                textboxWriteAnimated("Speaking of which, I should probably put my name somewhere.");
                                                                                                                                                                 setTimeout(() => {
-                                                                                                                                                                    document.styleSheets.item(0).addRule("#vert-container", "font-family: 'Noto Sans JP', sans-serif;");
+                                                                                                                                                                    const headingContainer = document.createElement('div');
+                                                                                                                                                                    headingContainer.id = "headingContainer";
+                                                                                                                                                                    const heading = document.createElement('h1');
+                                                                                                                                                                    heading.id = "heading";
+                                                                                                                                                                    heading.innerHTML = "Beckett O'Brien";
+                                                                                                                                                                    headingContainer.appendChild(heading);
+                                                                                                                                                                    vertContainer.insertBefore(headingContainer, profilePictureContainer);
+                                                                                                                                                                    document.styleSheets.item(0).addRule("#vert-container", "height: 90vh;");
                                                                                                                                                                     setTimeout(() => {
-                                                                                                                                                                        textboxWriteAnimated("I think it needs a shadow");
+                                                                                                                                                                        textboxWriteAnimated("Let me grab a better font real quick...");
                                                                                                                                                                         setTimeout(() => {
-                                                                                                                                                                            document.styleSheets.item(0).addRule(".fadingin, .fadingout", "text-shadow: -1px -1px 10px rgba(150, 150, 150, 0.8);");
-                                                                                                                                                                            document.styleSheets.item(0).addRule(".link-img", "box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);");
+                                                                                                                                                                            document.styleSheets.item(0).addRule("#vert-container", "font-family: 'Noto Sans JP', sans-serif;");
                                                                                                                                                                             setTimeout(() => {
+                                                                                                                                                                                textboxWriteAnimated("I think it needs a shadow");
                                                                                                                                                                                 setTimeout(() => {
-                                                                                                                                                                                    textboxWriteAnimated("Now we need a background");
+                                                                                                                                                                                    document.styleSheets.item(0).addRule(".fadingin, .fadingout", "text-shadow: -1px -1px 10px rgba(150, 150, 150, 0.8);");
+                                                                                                                                                                                    document.styleSheets.item(0).addRule(".link-img", "box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);");
                                                                                                                                                                                     setTimeout(() => {
-                                                                                                                                                                                        const particleContainer = document.createElement('div');
-                                                                                                                                                                                        particleContainer.id = 'particle-container';
-                                                                                                                                                                                        // particleContainer.style = "position: absolute; width: 100vw; height: 100vh; z-index: -10; top: 0; left: 0;";
-                                                                                                                                                                                        document.body.insertBefore(particleContainer, document.getElementById("vert-container"));
-                                                                                                                                                                                        const particlejsScript = document.createElement('script');
-                                                                                                                                                                                        particlejsScript.src = "https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.js";
-                                                                                                                                                                                        document.head.appendChild(particlejsScript);
-                                                                                                                                                                                        particlejsScript.onload = () => {
-                                                                                                                                                                                            particlesJS.load("particle-container", "assets/particlesjs-config.json", () => {
+                                                                                                                                                                                        setTimeout(() => {
+                                                                                                                                                                                            textboxWriteAnimated("Now we need a background");
+                                                                                                                                                                                            setTimeout(() => {
+                                                                                                                                                                                                textboxWriteAnimated("I know! I'll let you pick. Just gimme one sec...");
                                                                                                                                                                                                 setTimeout(() => {
-                                                                                                                                                                                                    textboxWriteAnimated("Hmm, maybe I'll try something else.");
-                                                                                                                                                                                                }, speed ? 10 : 5000)
-                                                                                                                                                                                            });
-                                                                                                                                                                                        }
-                                                                                                                                                                                    }, speed ? 10 : 1500)
-                                                                                                                                                                                }, speed ? 10 : 2000)
-                                                                                                                                                                            }, speed ? 10 : 5000)
+                                                                                                                                                                                                    // Choice here
+                                                                                                                                                                                                    setTimeout(() => {
+                                                                                                                                                                                                        document.styleSheets.item(0).addRule("#inline-choice-container", "display: inline; vertical-align: middle;");
+                                                                                                                                                                                                        document.styleSheets.item(0).addRule("#inline-choice-container > input", "margin: 5px; outline: -webkit-focus-ring-color auto 1px;");
+                                                                                                                                                                                                        // textboxWriteAnimated("Here! Just pick the background you want --> <div id='inline-choice-container'><input type='image' src='https://img.shields.io/badge/particles-red?style=for-the-badge' onclick='particleBackground()'><input type='image' src='https://img.shields.io/badge/matrix-green?style=for-the-badge' onclick='matrixBackground()'></div>");
+                                                                                                                                                                                                        textboxWriteAnimatedWithChoices("Here! Just pick the background you want --> ", [{ src:"https://img.shields.io/badge/particles-red?style=for-the-badge", func:"particleBackground()" }, { src:"https://img.shields.io/badge/matrix-green?style=for-the-badge", func:"matrixBackground()" }]);
+                                                                                                                                                                                                    }, 4000);
+                                                                                                                                                                                                    // particleBackground();
+                                                                                                                                                                                                }, speed ? 10 : 3000);
+                                                                                                                                                                                            }, speed ? 10 : 1500)
+                                                                                                                                                                                        }, speed ? 10 : 2000)
+                                                                                                                                                                                    }, speed ? 10 : 5000)
+                                                                                                                                                                                }, speed ? 10 : 1500)
+                                                                                                                                                                            }, speed ? 10 : 2500)
                                                                                                                                                                         }, speed ? 10 : 1500)
-                                                                                                                                                                    }, speed ? 10 : 2500)
+                                                                                                                                                                    }, speed ? 10 : 3000)
                                                                                                                                                                 }, speed ? 10 : 1500)
-                                                                                                                                                            }, speed ? 10 : 3000)
-                                                                                                                                                        }, speed ? 10 : 1500)
+                                                                                                                                                            }, speed ? 10 : 3500)
+                                                                                                                                                        }, speed ? 10 : 2000)
                                                                                                                                                     }, speed ? 10 : 3500)
                                                                                                                                                 }, speed ? 10 : 2500)
                                                                                                                                             }, speed ? 10 : 4000)
@@ -296,4 +321,30 @@ function buildPhase1() {
             }, speed ? 10 : 3000)
         }, speed ? 10 : 3000)
     }, speed ? 10 : 15000)
+}
+
+function particleBackground() {
+    if (document.getElementById('matrix-container')) return;
+    const particleContainer = document.createElement('div');
+    particleContainer.id = 'particle-container';
+    document.styleSheets.item(0).addRule("#particle-container", "position : absolute; width:100%; height:100%; z-index:-1;");
+    document.body.insertBefore(particleContainer, document.getElementById("vert-container"));
+    const particlejsScript = document.createElement('script');
+    particlejsScript.src = "https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.js";
+    document.head.appendChild(particlejsScript);
+    particlejsScript.onload = () => {
+        particlesJS.load("particle-container", "assets/particlesjs-config.json", () => {
+            setTimeout(() => {
+                textboxWriteAnimated("I like it, but... Not very original, right?");
+            }, speed ? 10 : 5000)
+        });
+    }
+}
+
+function matrixBackground() {
+    if (document.getElementById('particle-container')) return;
+    const matrixContainer = document.createElement('div');
+    matrixContainer.id = 'matrix-container';
+    document.body.insertBefore(matrixContainer, document.getElementById("vert-container"));
+    // Implement Matrix Background here
 }
