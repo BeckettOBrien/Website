@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#vert-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#centerTextContainer {
+    font-size: 16px;
+    text-align: center;
+    line-height: 5px;
+    margin: 10px;
+    position: relative;
+    display:block;
+    width:100%;
+}
+
+@media screen and (max-width: 500px) {
+    #centerTextContainer {
+        line-height: 21px;
+    }
+}
+
+.centerTextContainerTransitioning {
+    max-height: 37px;
+    min-height: 37px;
+}
+
+.centerTextContainerTransitioning > p {
+  position:absolute;
+  display:block;
+  width:100%;
+  left:0;
+  right:0;
+}
+
+#links-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 50vw;
+}
+#links-container img {
+    margin: 5px;
+}
+
+@media screen and (max-width: 500px) {
+    #links-container {
+        flex-direction: column-reverse;
+    }
+}
+
+@keyframes fade-out {
+    from {
+        bottom: 0px;
+        opacity: 100%;
+        font-size: 16px;
+    }
+    to {
+        bottom: 25px;
+        opacity: 0%;
+        font-size: 4px;
+    }
+}
+
+@keyframes fade-in {
+    from {
+        top: 25px;
+        opacity: 0%;
+        font-size: 4px;
+    }
+    to {
+        top: 0px;
+        opacity: 100%;
+        font-size: 16px;
+    }
+}
+
+.fadingout {
+    animation-name: fade-out;
+    animation-duration: 500ms;
+    animation-fill-mode: forwards;
+}
+.fadingin {
+    animation-name: fade-in;
+    animation-duration: 500ms;
+}
+
+#profilePicture {
+    border-radius: 50%;
+    width: 200px;
+    height: 200px;
+}
+
+#particle-container {
+    position : absolute;
+    width:100%;
+    height:100%;
+    z-index:-1;
+}
