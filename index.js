@@ -29,8 +29,8 @@ function wrapIdWithDiv(elementId, divId) {
     return div;
 }
 
-function httpGetAsync(theUrl, callback)
-{
+function httpGetAsync(theUrl, callback) {
+    // I did not make this.
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
@@ -271,7 +271,7 @@ function buildPhase1() {
                                                                                                                                                                                                         document.styleSheets.item(0).addRule("#inline-choice-container > input", "margin: 5px; outline: -webkit-focus-ring-color auto 1px;");
                                                                                                                                                                                                         // textboxWriteAnimated("Here! Just pick the background you want --> <div id='inline-choice-container'><input type='image' src='https://img.shields.io/badge/particles-red?style=for-the-badge' onclick='particleBackground()'><input type='image' src='https://img.shields.io/badge/matrix-green?style=for-the-badge' onclick='matrixBackground()'></div>");
                                                                                                                                                                                                         textboxWriteAnimatedWithChoices("Here! Just pick the background you want --> ", [{ src:"https://img.shields.io/badge/particles-red?style=for-the-badge", func:"particleBackground()" }, { src:"https://img.shields.io/badge/matrix-green?style=for-the-badge", func:"matrixBackground()" }]);
-                                                                                                                                                                                                    }, 4000);
+                                                                                                                                                                                                    }, speed ? 10 : 4000);
                                                                                                                                                                                                     // particleBackground();
                                                                                                                                                                                                 }, speed ? 10 : 3000);
                                                                                                                                                                                             }, speed ? 10 : 1500)
@@ -336,6 +336,13 @@ function particleBackground() {
         particlesJS.load("particle-container", "assets/particlesjs-config.json", () => {
             setTimeout(() => {
                 textboxWriteAnimated("I like it, but... Not very original, right?");
+                setTimeout(() => {
+                    textboxWriteAnimated("I think I'll take it down for now.");
+                    setTimeout(() => {
+                        window.pJSDom[0].pJS.fn.vendors.destroypJS();
+                        document.getElementById('particle-container').remove();
+                    }, speed ? 10 : 3000)
+                }, speed ? 10 : 2500)
             }, speed ? 10 : 5000)
         });
     }
@@ -345,6 +352,46 @@ function matrixBackground() {
     if (document.getElementById('particle-container')) return;
     const matrixContainer = document.createElement('div');
     matrixContainer.id = 'matrix-container';
+    document.styleSheets.item(0).addRule("#matrix-container", "position : absolute; width:100%; height:100%; z-index:-1;");
     document.body.insertBefore(matrixContainer, document.getElementById("vert-container"));
-    // Implement Matrix Background here
+    const matrixCanvas = document.createElement('canvas');
+    matrixContainer.appendChild(matrixCanvas);
+    const ctx = matrixCanvas.getContext('2d');
+    const w = matrixCanvas.width = window.innerWidth;
+    const h = matrixCanvas.height = window.innerHeight;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,w,h);
+    document.styleSheets.item(0).addRule("#vert-container", "color: white;");
+    document.getElementById('gh-link').children.item(0).src = "https://img.shields.io/badge/-GitHub-grey?style=for-the-badge&logo=github";
+    const cols = Math.floor(w/20)+1;
+    const ypos = Array(cols).fill(0);
+    const matrixDrawLoop = setInterval(() => {
+        ctx.fillStyle = '#0001';
+        ctx.fillRect(0,0,w,h);
+
+        ctx.fillStyle = '#0f0';
+        ctx.font = '15pt monospace';
+
+        ypos.forEach((y, ind) => {
+            const text = String.fromCharCode(Math.random() * 128);
+            const x = ind * 20;
+            ctx.fillText(text,x,y);
+
+            if (y > 100 + Math.random() * 10000) ypos[ind] = 0;
+            else ypos[ind] = y + 20;
+        });
+    }, 50)
+
+    setTimeout(() => {
+        textboxWriteAnimated("Looks cool, but maybe a bit much?")
+        setTimeout(() => {
+            textboxWriteAnimated("I think I'll take it down for now.");
+            setTimeout(() => {
+                clearInterval(matrixDrawLoop);
+                document.getElementById('matrix-container').remove();
+                document.styleSheets.item(0).addRule("#vert-container", "color: black;");
+                document.getElementById('gh-link').children.item(0).src = "https://img.shields.io/badge/-GitHub-black?style=for-the-badge&logo=github";
+            }, speed ? 10 : 3000)
+        }, speed ? 10 : 2500)
+    }, speed ? 10 : 5000)
 }
