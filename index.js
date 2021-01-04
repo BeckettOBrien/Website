@@ -232,7 +232,7 @@ function buildPhase1() {
                                                                                                                                                     profilePictureContainer.id = "profilePictureContainer";
                                                                                                                                                     const profilePicture = document.createElement('img');
                                                                                                                                                     profilePicture.id = "profilePicture";
-                                                                                                                                                    profilePicture.src = "https://coolbackgrounds.io/images/backgrounds/black/pure-black-background-f82588d3.jpg";
+                                                                                                                                                    profilePicture.src = "assets/black.jpg";
                                                                                                                                                     profilePictureContainer.appendChild(profilePicture);
                                                                                                                                                     vertContainer.insertBefore(profilePictureContainer, document.getElementById("centerTextContainer"));
                                                                                                                                                     setTimeout(() => {
@@ -269,7 +269,6 @@ function buildPhase1() {
                                                                                                                                                                                                     setTimeout(() => {
                                                                                                                                                                                                         document.styleSheets.item(0).addRule("#inline-choice-container", "display: inline; vertical-align: middle;");
                                                                                                                                                                                                         document.styleSheets.item(0).addRule("#inline-choice-container > input", "margin: 5px; outline: -webkit-focus-ring-color auto 1px;");
-                                                                                                                                                                                                        // textboxWriteAnimated("Here! Just pick the background you want --> <div id='inline-choice-container'><input type='image' src='https://img.shields.io/badge/particles-red?style=for-the-badge' onclick='particleBackground()'><input type='image' src='https://img.shields.io/badge/matrix-green?style=for-the-badge' onclick='matrixBackground()'></div>");
                                                                                                                                                                                                         textboxWriteAnimatedWithChoices("Here! Just pick the background you want --> ", [{ src:"https://img.shields.io/badge/particles-red?style=for-the-badge", func:"particleBackground()" }, { src:"https://img.shields.io/badge/matrix-green?style=for-the-badge", func:"matrixBackground()" }]);
                                                                                                                                                                                                     }, speed ? 10 : 4000);
                                                                                                                                                                                                     // particleBackground();
@@ -324,6 +323,7 @@ function buildPhase1() {
 }
 
 function particleBackground() {
+    if (document.getElementById('particle-container')) return;
     if (document.getElementById('matrix-container')) return;
     const particleContainer = document.createElement('div');
     particleContainer.id = 'particle-container';
@@ -341,6 +341,8 @@ function particleBackground() {
                     setTimeout(() => {
                         window.pJSDom[0].pJS.fn.vendors.destroypJS();
                         document.getElementById('particle-container').remove();
+                        cameraShake();
+                        buildPhase2();
                     }, speed ? 10 : 3000)
                 }, speed ? 10 : 2500)
             }, speed ? 10 : 5000)
@@ -350,6 +352,7 @@ function particleBackground() {
 
 function matrixBackground() {
     if (document.getElementById('particle-container')) return;
+    if (document.getElementById('matrix-container')) return;
     const matrixContainer = document.createElement('div');
     matrixContainer.id = 'matrix-container';
     document.styleSheets.item(0).addRule("#matrix-container", "position : absolute; width:100%; height:100%; z-index:-1;");
@@ -362,6 +365,7 @@ function matrixBackground() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0,0,w,h);
     document.styleSheets.item(0).addRule("#vert-container", "color: white;");
+    document.getElementById('profilePicture').src = 'assets/white.jpg';
     document.getElementById('gh-link').children.item(0).src = "https://img.shields.io/badge/-GitHub-grey?style=for-the-badge&logo=github";
     const cols = Math.floor(w/20)+1;
     const ypos = Array(cols).fill(0);
@@ -390,8 +394,100 @@ function matrixBackground() {
                 clearInterval(matrixDrawLoop);
                 document.getElementById('matrix-container').remove();
                 document.styleSheets.item(0).addRule("#vert-container", "color: black;");
+                document.getElementById('profilePicture').src = 'assets/black.jpg';
                 document.getElementById('gh-link').children.item(0).src = "https://img.shields.io/badge/-GitHub-black?style=for-the-badge&logo=github";
+                cameraShake();
+                buildPhase2();
             }, speed ? 10 : 3000)
         }, speed ? 10 : 2500)
     }, speed ? 10 : 5000)
+}
+
+const sleep = (milliseconds) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
+async function cameraShake() {
+    for (i = 0; i < 6; i++) {
+        shakeX = (Math.random() * 10) - 5;
+        shakeY = (Math.random() * 10) - 5;
+        document.body.style.transform = `translate(${shakeX}px,${shakeY}px)`;
+        await sleep((Math.random() * 45) + 5);
+    }
+    document.body.style.transform = '';
+}
+
+function crack() {
+    var canvas = document.getElementById('crack-canvas');
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'crack-canvas';
+        document.styleSheets.item(0).addRule("#crack-canvas", "position : absolute; width:100%; height:100%; z-index:-1;");
+        document.body.insertBefore(canvas, document.getElementById('vert-container'));
+    }
+    const ctx = canvas.getContext('2d');
+    const img = document.createElement('img');
+    img.src = "assets/crack-1.png";
+    img.style.transform = `rotate(${Math.round(Math.random() * 360)}deg)`;
+    const x = (Math.random() * (window.innerWidth - 50)) + 50;
+    const y = (Math.random() * (window.innerHeight - 50)) + 50;
+    console.log(`X: ${x} | Y: ${y}`);
+    img.onload = (() => {ctx.drawImage(img,25,0,50,50); cameraShake();});
+}
+
+async function buildPhase2() {
+    // Gonna try out this method of defining phases
+    // I just can't manage another massive set of indentations and setTimeout-ception
+    // Probably over-engineered, but I don't really care
+    const subPhases = [
+        {
+            func: () => {
+                textboxWriteAnimated("Uhhhhhhhhhhhhhh");
+            },
+
+            timeout: 2000
+        },
+        {
+            func: () => {
+                textboxWriteAnimated("That didn't sound good.");
+            },
+
+            timeout: 1500
+        },
+        {
+            func: () => {
+                textboxWriteAnimated("Nah, it's probably fine.");
+            },
+
+            timeout: 3000
+        },
+        {
+            func: () => {
+                textboxWriteAnimated("Help me decide on a theme!");
+            },
+
+            timeout: 2000
+        },
+        {
+            func: () => {
+                textboxWriteAnimatedWithChoices("Which one do you like --> ", [
+                    {
+                        src: "https://img.shields.io/badge/Industrial-grey?style=for-the-badge",
+                        func: "cameraShake()"
+                    },
+                    {
+                        src: "https://img.shields.io/badge/Modern-white?style=for-the-badge",
+                        func: "cameraShake()"
+                    }
+                ])
+            },
+
+            timeout: 1500
+        }
+    ];
+
+    for (phase of subPhases) {
+        await sleep(speed ? 10 : phase.timeout);
+        phase.func();
+    }
 }
