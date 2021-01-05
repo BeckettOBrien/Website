@@ -1,4 +1,2 @@
-Hi!
-In addition to the commit descriptions, I think I might also start writing things here while I develop this. Don't know, thought it might be fun.
-Anyway, I'm not going to add to this which each commit, I'm going to replace it so that anyone who looks through this (which is probably not going to be very many people) has to go back through the git history.
-See you around!
+I'm about to start adding the first physics thingy. I found a cool plugin for a physics library that lets me render out the objects through the DOM, which is the effect I'm going for.
+This way I don't have to blend the existing elements with a canvas or something like that.

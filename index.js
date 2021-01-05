@@ -82,7 +82,7 @@ function textboxWriteAnimatedWithChoices(str, choices) {
     newText.className = "fadingin";
     var body = str + "<div id='inline-choice-container'>";
     for (choice of choices) {
-        body += `<input type='image' src='${choice.src}' onclick='${choice.func}'>`;
+        body += `<input type='image' src='${choice.src}' onclick='${choice.func.replace(/\'/g, '\x22')}' ${choice.id ? `id="${choice.id}"` : ''}>`;
     }
     body += "</div>";
     newText.innerHTML = body;
@@ -327,7 +327,7 @@ function particleBackground() {
     if (document.getElementById('matrix-container')) return;
     const particleContainer = document.createElement('div');
     particleContainer.id = 'particle-container';
-    document.styleSheets.item(0).addRule("#particle-container", "position : absolute; width:100%; height:100%; z-index:-1;");
+    document.styleSheets.item(0).addRule("#particle-container", `position : absolute; width:100%; height:100%; z-index:-1;`);
     document.body.insertBefore(particleContainer, document.getElementById("vert-container"));
     const particlejsScript = document.createElement('script');
     particlejsScript.src = "https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.js";
@@ -407,20 +407,26 @@ const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
-async function cameraShake() {
+function cameraShake(deviation=10) {
+    shake(document.body, deviation);
+}
+
+async function shake(element, deviation) {
     for (i = 0; i < 6; i++) {
-        shakeX = (Math.random() * 10) - 5;
-        shakeY = (Math.random() * 10) - 5;
-        document.body.style.transform = `translate(${shakeX}px,${shakeY}px)`;
+        shakeX = (Math.random() * deviation) - (deviation/2);
+        shakeY = (Math.random() * deviation) - (deviation/2);
+        element.style.transform = `translate(${shakeX}px,${shakeY}px)`;
         await sleep((Math.random() * 45) + 5);
     }
-    document.body.style.transform = '';
+    element.style.transform = '';
 }
 
 function crack() {
     var canvas = document.getElementById('crack-canvas');
     if (!canvas) {
         canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         canvas.id = 'crack-canvas';
         document.styleSheets.item(0).addRule("#crack-canvas", "position : absolute; width:100%; height:100%; z-index:-1;");
         document.body.insertBefore(canvas, document.getElementById('vert-container'));
@@ -432,7 +438,7 @@ function crack() {
     const x = (Math.random() * (window.innerWidth - 50)) + 50;
     const y = (Math.random() * (window.innerHeight - 50)) + 50;
     console.log(`X: ${x} | Y: ${y}`);
-    img.onload = (() => {ctx.drawImage(img,25,0,50,50); cameraShake();});
+    img.onload = (() => {ctx.drawImage(img,x,y,50,50); cameraShake();});
 }
 
 async function buildPhase2() {
@@ -459,7 +465,7 @@ async function buildPhase2() {
                 textboxWriteAnimated("Nah, it's probably fine.");
             },
 
-            timeout: 3000
+            timeout: 3500
         },
         {
             func: () => {
@@ -472,12 +478,14 @@ async function buildPhase2() {
             func: () => {
                 textboxWriteAnimatedWithChoices("Which one do you like --> ", [
                     {
+                        id: 'theme-choice-industrial',
                         src: "https://img.shields.io/badge/Industrial-grey?style=for-the-badge",
-                        func: "cameraShake()"
+                        func: "shake(document.getElementById('theme-choice-industrial'), 4)"
                     },
                     {
+                        id: 'theme-choice-modern',
                         src: "https://img.shields.io/badge/Modern-white?style=for-the-badge",
-                        func: "cameraShake()"
+                        func: "shake(document.getElementById('theme-choice-modern'), 4)"
                     }
                 ])
             },
