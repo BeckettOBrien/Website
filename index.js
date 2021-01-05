@@ -475,17 +475,18 @@ async function buildPhase2() {
             timeout: 2000
         },
         {
-            func: () => {
+            func: async () => {
+                await initializeMatterJs();
                 textboxWriteAnimatedWithChoices("Which one do you like --> ", [
                     {
                         id: 'theme-choice-industrial',
                         src: "https://img.shields.io/badge/Industrial-grey?style=for-the-badge",
-                        func: "shake(document.getElementById('theme-choice-industrial'), 4)"
+                        func: "pickThemeChoice('theme-choice-industrial')"
                     },
                     {
                         id: 'theme-choice-modern',
                         src: "https://img.shields.io/badge/Modern-white?style=for-the-badge",
-                        func: "shake(document.getElementById('theme-choice-modern'), 4)"
+                        func: "pickThemeChoice('theme-choice-modern')"
                     }
                 ])
             },
@@ -496,6 +497,84 @@ async function buildPhase2() {
 
     for (phase of subPhases) {
         await sleep(speed ? 10 : phase.timeout);
-        phase.func();
+        await phase.func();
     }
+}
+
+// Matter.js Aliases
+var Engine;
+var Runner;
+var RenderDom;
+var DomBodies;
+var MouseConstraint;
+var DomMouseConstraint;
+var Mouse;
+var World;
+
+// Matter.js Global Variables
+var engine;
+var world;
+var runner;
+var render;
+
+function pickThemeChoice(id) {
+    shake(document.getElementById(id), 4);
+    const buttonDom = document.getElementById(id);
+    const buttonBody = DomBodies.block(buttonDom.getBoundingClientRect().top, buttonDom.getBoundingClientRect().left, {
+        Dom: {
+            render: render,
+            element: buttonDom
+        }
+    });
+    // Matter.World.add(world, buttonBody);
+}
+
+async function initializeMatterJs() {
+    const debugBlock = document.createElement('div');
+    debugBlock.id = 'debug';
+    document.body.appendChild(debugBlock);
+    document.styleSheets.item(0).addRule("#debug", "position : absolute; z-index:-1; overflow: hidden;");
+
+    const matterJs = document.createElement('script');
+    matterJs.src = 'matter.js';
+    const mainScriptLoaded = new Promise((resolve, reject) => {
+        matterJs.onload = () => {
+            resolve();
+        }
+    });
+    const matterJsDom = document.createElement('script');
+    matterJsDom.src = 'matter-dom-plugin.js';
+    const pluginScriptLoaded = new Promise((resolve, reject) => {
+        matterJsDom.onload = () => {
+            resolve();
+        }
+    })
+
+    document.head.appendChild(matterJs);
+    await mainScriptLoaded;
+    document.head.appendChild(matterJsDom);
+    await pluginScriptLoaded;
+
+    Matter.use('matter-dom-plugin');
+
+    Engine = Matter.Engine;
+    Runner = Matter.Runner;
+    RenderDom = Matter.RenderDom;
+    DomBodies = Matter.DomBodies;
+    MouseConstraint = Matter.MouseConstraint;
+    DomMouseConstraint = Matter.DomMouseConstraint;
+    Mouse = Matter.Mouse;
+    World = Matter.World;
+
+    engine = Engine.create();
+    world = engine.world;
+    runner = Runner.create();
+    Runner.run(engine, runner);
+    render = RenderDom.create({
+        engine: engine
+    });
+    RenderDom.run(render);
+
+    // var floor = DomBodies.block(window.innerWidth/2, window.innerHeight, window.innerWidth, window.innerHeight, { isStatic: true });
+    // World.add(world, [floor]);
 }

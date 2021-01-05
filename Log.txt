@@ -1,2 +1,0 @@
-I'm about to start adding the first physics thingy. I found a cool plugin for a physics library that lets me render out the objects through the DOM, which is the effect I'm going for.
-This way I don't have to blend the existing elements with a canvas or something like that.
