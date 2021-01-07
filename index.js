@@ -268,7 +268,7 @@ function buildPhase1() {
                                                                                                                                                                                                     // Choice here
                                                                                                                                                                                                     setTimeout(() => {
                                                                                                                                                                                                         document.styleSheets.item(0).addRule("#inline-choice-container", "display: inline; vertical-align: middle;");
-                                                                                                                                                                                                        document.styleSheets.item(0).addRule("#inline-choice-container > input", "margin: 5px; outline: -webkit-focus-ring-color auto 1px;");
+                                                                                                                                                                                                        document.styleSheets.item(0).addRule("input", "margin: 5px; outline: -webkit-focus-ring-color auto 1px;");
                                                                                                                                                                                                         textboxWriteAnimatedWithChoices("Here! Just pick the background you want --> ", [{ src:"https://img.shields.io/badge/particles-red?style=for-the-badge", func:"particleBackground()" }, { src:"https://img.shields.io/badge/matrix-green?style=for-the-badge", func:"matrixBackground()" }]);
                                                                                                                                                                                                     }, speed ? 10 : 4000);
                                                                                                                                                                                                     // particleBackground();
@@ -504,10 +504,9 @@ async function buildPhase2() {
 // Matter.js Aliases
 var Engine;
 var Runner;
-var RenderDom;
-var DomBodies;
+var Render;
+var Bodies;
 var MouseConstraint;
-var DomMouseConstraint;
 var Mouse;
 var World;
 
@@ -515,25 +514,71 @@ var World;
 var engine;
 var world;
 var runner;
-var render;
+var renderInterval;
+
+// Global Matter.js Objects
+var objectProperties = {};
+var floor;
+var leftWall;
+var rightWall;
+
+// Helpful Matter.js Functions
+function rect(x, y, width, height) {
+    return Bodies.rectangle(x, y, width, height, {
+        isStatic: false
+    });
+}
+
+function circle(x, y, radius) {
+    return Bodies.circle(x, y, radius, {
+        isStatic: false
+    })
+}
+
+function wall(x, y, width, height, cornerRadius=0) {
+    return Bodies.rectangle(x, y, width, height, {
+        isStatic: true,
+        chamfer: { radius: cornerRadius }
+    });
+}
+
+function getDomElementBounds(element) {
+    box = element.getBoundingClientRect();
+    return {
+        x: ((box.left + box.right)/2),
+        y: ((box.top + box.bottom)/2),
+        width: (box.right - box.left),
+        height: (box.bottom - box.top)
+    }
+}
 
 function pickThemeChoice(id) {
-    shake(document.getElementById(id), 4);
     const buttonDom = document.getElementById(id);
-    const buttonBody = DomBodies.block(buttonDom.getBoundingClientRect().top, buttonDom.getBoundingClientRect().left, {
-        Dom: {
-            render: render,
-            element: buttonDom
-        }
-    });
-    // Matter.World.add(world, buttonBody);
+    buttonDom.onclick = '';
+    var buttonBounds = getDomElementBounds(buttonDom);
+    const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
+    buttonDom.parentNode.removeChild(buttonDom);
+    document.getElementById('matterjs-container').appendChild(buttonDom);
+    buttonBounds = getDomElementBounds(buttonDom);
+    buttonObject.label = id;
+    buttonObject.restitution = 0.2;
+    Matter.Body.setAngularVelocity(buttonObject, -(Math.PI/115));
+    // Matter.Body.setVelocity(buttonObject, -1);
+    objectProperties[id] = {
+        x: buttonBounds.x,
+        y: buttonBounds.y,
+        width: buttonBounds.width,
+        height: buttonBounds.height
+    }
+
+    World.add(world, [buttonObject]);
 }
 
 async function initializeMatterJs() {
-    const debugBlock = document.createElement('div');
-    debugBlock.id = 'debug';
-    document.body.appendChild(debugBlock);
-    document.styleSheets.item(0).addRule("#debug", "position : absolute; z-index:-1; overflow: hidden;");
+    // const debugBlock = document.createElement('div');
+    // debugBlock.id = 'debug';
+    // document.body.appendChild(debugBlock);
+    // document.styleSheets.item(0).addRule("#debug", "position : absolute; z-index:-1; overflow: hidden;");
 
     const matterJs = document.createElement('script');
     matterJs.src = 'matter.js';
@@ -542,27 +587,22 @@ async function initializeMatterJs() {
             resolve();
         }
     });
-    const matterJsDom = document.createElement('script');
-    matterJsDom.src = 'matter-dom-plugin.js';
-    const pluginScriptLoaded = new Promise((resolve, reject) => {
-        matterJsDom.onload = () => {
-            resolve();
-        }
-    })
+
+    // const matterJsCanvas = document.createElement('canvas');
+    // matterJsCanvas.width = window.innerWidth;
+    // matterJsCanvas.height = window.innerHeight;
+    // matterJsCanvas.id = 'matterJsCanvas';
+    // document.styleSheets.item(0).addRule("#matterJsCanvas", "position : absolute; z-index:-1; overflow: hidden;");
 
     document.head.appendChild(matterJs);
+    // document.body.appendChild(matterJsCanvas);
     await mainScriptLoaded;
-    document.head.appendChild(matterJsDom);
-    await pluginScriptLoaded;
-
-    Matter.use('matter-dom-plugin');
 
     Engine = Matter.Engine;
     Runner = Matter.Runner;
-    RenderDom = Matter.RenderDom;
-    DomBodies = Matter.DomBodies;
+    Render = Matter.Render;
+    Bodies = Matter.Bodies;
     MouseConstraint = Matter.MouseConstraint;
-    DomMouseConstraint = Matter.DomMouseConstraint;
     Mouse = Matter.Mouse;
     World = Matter.World;
 
@@ -570,11 +610,79 @@ async function initializeMatterJs() {
     world = engine.world;
     runner = Runner.create();
     Runner.run(engine, runner);
-    render = RenderDom.create({
-        engine: engine
-    });
-    RenderDom.run(render);
 
-    // var floor = DomBodies.block(window.innerWidth/2, window.innerHeight, window.innerWidth, window.innerHeight, { isStatic: true });
-    // World.add(world, [floor]);
+    // const canvas = document.createElement('canvas');
+    // canvas.width = window.innerWidth;
+    // canvas.height = window.innerHeight;
+    // canvas.id = 'matterJsCanvas';
+    // document.styleSheets.item(0).addRule("#matterJsCanvas", "position : absolute; width:100%; height:100%; z-index:-1;");
+    // document.body.insertBefore(canvas, document.getElementById('vert-container'));
+
+    // render = Render.create({
+    //     engine: engine,
+    //     width: window.innerWidth,
+    //     height: window.innerHeight,
+    //     background: 'white',
+    //     canvas: canvas
+    // });
+    // Render.run(render);
+
+    floor = wall(window.innerWidth/2, window.innerHeight + 5, window.innerWidth, 10);
+    leftWall = wall(-5, window.innerHeight/2, 10, window.innerHeight);
+    rightWall = wall(window.innerWidth + 5, window.innerHeight/2, 10, window.innerHeight);
+    World.add(world, [floor, leftWall, rightWall]);
+
+    const particleContainer = document.createElement('div');
+    particleContainer.id = 'matterjs-container';
+    document.styleSheets.item(0).addRule("#matterjs-container", `position : absolute; width:100%; height:100%; z-index:2; pointer-events: none;`);
+    document.styleSheets.item(0).addRule("#matterjs-container > *", "pointer-events: auto;");
+    document.setAngularVelocity
+    document.body.insertBefore(particleContainer, document.getElementById("vert-container"));
+
+    renderInterval = setInterval(drawDom, 5);
+    
+}
+
+function drawDom() {
+    world.bodies.forEach((body) => {
+        const bodyDom = document.getElementById(body.label);
+        if (!bodyDom) return;
+        bodyDom.style.transform = `translate(${body.position.x - objectProperties[body.label].x}px, ${body.position.y - objectProperties[body.label].y}px) rotate(${body.angle}rad)`;
+        // clearInterval(renderInterval);
+        // console.log(body);
+    });
+}
+
+function crash() {
+    rect_fall_ids = ["heading", "centerText", "gh-link", "discordStatus"];
+    rect_fall_ids.forEach((id) => {
+        const node = document.getElementById(id);
+        const bounds = getDomElementBounds(node);
+        const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
+        object.label = id;
+        object.restitution = 0.2;
+        objectProperties[id] = {
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height
+        }
+        World.add(world, object);
+    });
+
+    circle_fall_ids = ["profilePicture"];
+    circle_fall_ids.forEach((id) => {
+        const node = document.getElementById(id);
+        const bounds = getDomElementBounds(node);
+        const object = circle(bounds.x, bounds.y, bounds.width/2);
+        object.label = id;
+        object.restitution = 0.2;
+        objectProperties[id] = {
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height
+        }
+        World.add(world, object);
+    })
 }

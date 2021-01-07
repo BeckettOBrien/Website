@@ -1,0 +1,6 @@
+Right now, I've gotten a lot of the pyhsics stuff to work, but this is what I still have to fix:
+    - Keep text transform to a box, not an infinite-width rectangle
+    - Keep text transform when an element is removed from a flexbox (when the buttons fall)
+    - Get the mouse to fall too, because that would be pretty funny
+
+Anyway, I'm gonna keep working but I feel like I should put more random stuff here in the future :D
