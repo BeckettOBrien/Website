@@ -325,6 +325,7 @@ function buildPhase1() {
 function particleBackground() {
     if (document.getElementById('particle-container')) return;
     if (document.getElementById('matrix-container')) return;
+    analytics.logEvent('checkpoint', { name: 'phase_one' });
     const particleContainer = document.createElement('div');
     particleContainer.id = 'particle-container';
     document.styleSheets.item(0).addRule("#particle-container", `position : absolute; width:100%; height:100%; z-index:-1;`);
@@ -341,6 +342,7 @@ function particleBackground() {
                     setTimeout(() => {
                         window.pJSDom[0].pJS.fn.vendors.destroypJS();
                         document.getElementById('particle-container').remove();
+                        analytics.logEvent('checkpoint', { name: 'particle_background' });
                         cameraShake();
                         buildPhase2();
                     }, speed ? 10 : 3000)
@@ -353,6 +355,7 @@ function particleBackground() {
 function matrixBackground() {
     if (document.getElementById('particle-container')) return;
     if (document.getElementById('matrix-container')) return;
+    analytics.logEvent('checkpoint', { name: 'phase_one' });
     const matrixContainer = document.createElement('div');
     matrixContainer.id = 'matrix-container';
     document.styleSheets.item(0).addRule("#matrix-container", "position : absolute; width:100%; height:100%; z-index:-1;");
@@ -396,6 +399,7 @@ function matrixBackground() {
                 document.styleSheets.item(0).addRule("#vert-container", "color: black;");
                 document.getElementById('profilePicture').src = 'assets/black.jpg';
                 document.getElementById('gh-link').children.item(0).src = "https://img.shields.io/badge/-GitHub-black?style=for-the-badge&logo=github";
+                analytics.logEvent('checkpoint', { name: 'matrix_background' });
                 cameraShake();
                 buildPhase2();
             }, speed ? 10 : 3000)
@@ -476,6 +480,7 @@ async function buildPhase2() {
         },
         {
             func: async () => {
+                analytics.logEvent('checkpoint', { name: 'reach_physics' });;
                 await initializeMatterJs();
                 textboxWriteAnimatedWithChoices("Which one do you like --> ", [
                     {
@@ -521,6 +526,7 @@ var objectProperties = {};
 var floor;
 var leftWall;
 var rightWall;
+var mouse;
 
 // Helpful Matter.js Functions
 function rect(x, y, width, height) {
@@ -552,26 +558,51 @@ function getDomElementBounds(element) {
     }
 }
 
+function addElementToMatterJs(element, restitution = 0.2, newContainerId = 'matterjs-container') {
+    var bounds = getDomElementBounds(element);
+    const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
+    element.parentNode.removeChild(element);
+    document.getElementById(newContainerId).appendChild(element);
+    bounds = getDomElementBounds(element);
+    object.label = element.id;
+    object.restitution = restitution;
+    objectProperties[element.id] = {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        object: object
+    }
+    World.add(world, object);
+    return object;
+}
+
 function pickThemeChoice(id) {
     const buttonDom = document.getElementById(id);
     buttonDom.onclick = '';
-    var buttonBounds = getDomElementBounds(buttonDom);
-    const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
-    buttonDom.parentNode.removeChild(buttonDom);
-    document.getElementById('matterjs-container').appendChild(buttonDom);
-    buttonBounds = getDomElementBounds(buttonDom);
-    buttonObject.label = id;
-    buttonObject.restitution = 0.2;
-    Matter.Body.setAngularVelocity(buttonObject, -(Math.PI/115));
-    // Matter.Body.setVelocity(buttonObject, -1);
-    objectProperties[id] = {
-        x: buttonBounds.x,
-        y: buttonBounds.y,
-        width: buttonBounds.width,
-        height: buttonBounds.height
-    }
+    const parent = buttonDom.parentNode.parentNode;
+    const originalParentBounds = getDomElementBounds(parent);
+    addElementToMatterJs(buttonDom);
+    const newParentBounds = getDomElementBounds(parent);
+    parent.style.transform = `translate(${(newParentBounds.width - originalParentBounds.width)/2}px, 0px)`;
+    Matter.Body.setAngularVelocity(objectProperties[id].object, -(Math.PI/115));
+    // var buttonBounds = getDomElementBounds(buttonDom);
+    // const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
+    // buttonDom.parentNode.removeChild(buttonDom);
+    // document.getElementById('matterjs-container').appendChild(buttonDom);
+    // buttonBounds = getDomElementBounds(buttonDom);
+    // buttonObject.label = id;
+    // buttonObject.restitution = 0.2;
+    // Matter.Body.setAngularVelocity(buttonObject, -(Math.PI/115));
+    // // Matter.Body.setVelocity(buttonObject, -1);
+    // objectProperties[id] = {
+    //     x: buttonBounds.x,
+    //     y: buttonBounds.y,
+    //     width: buttonBounds.width,
+    //     height: buttonBounds.height
+    // }
 
-    World.add(world, [buttonObject]);
+    // World.add(world, [buttonObject]);
 }
 
 async function initializeMatterJs() {
@@ -640,6 +671,14 @@ async function initializeMatterJs() {
     document.body.insertBefore(particleContainer, document.getElementById("vert-container"));
 
     renderInterval = setInterval(drawDom, 5);
+
+    document.onmousemove = (e) => {
+        mouse = {
+            x: e.clientX,
+            y: e.clientY
+        }
+        //console.log(mouse);
+    }
     
 }
 
@@ -658,6 +697,9 @@ function crash() {
     rect_fall_ids.forEach((id) => {
         const node = document.getElementById(id);
         const bounds = getDomElementBounds(node);
+        if (node.nodeName == "P") {
+            bounds.height += 15;
+        }
         const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
         object.label = id;
         object.restitution = 0.2;
@@ -669,6 +711,29 @@ function crash() {
         }
         World.add(world, object);
     });
+
+    // This is awful. Someone please make me fix this
+    document.getElementById("centerText").childNodes.item(1).childNodes.forEach((node) => {
+        if (node.nodeName == "INPUT") {
+            const buttonDom = node;
+            buttonDom.onclick = '';
+            var buttonBounds = getDomElementBounds(buttonDom);
+            const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
+            buttonDom.parentNode.removeChild(buttonDom);
+            document.getElementById('matterjs-container').appendChild(buttonDom);
+            buttonBounds = getDomElementBounds(buttonDom);
+            buttonObject.label = node.id;
+            buttonObject.restitution = 0.2;
+            objectProperties[node.id] = {
+                x: buttonBounds.x,
+                y: buttonBounds.y,
+                width: buttonBounds.width,
+                height: buttonBounds.height
+            }
+
+            World.add(world, [buttonObject]);
+        }
+    })
 
     circle_fall_ids = ["profilePicture"];
     circle_fall_ids.forEach((id) => {

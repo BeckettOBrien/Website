@@ -5,6 +5,7 @@ body, html {
     padding: 0;
     overflow: hidden;
     height: 100vh;
+    /* cursor: url('assets/cursor.png'), auto; */
 }
 
 #vert-container {
@@ -22,7 +23,7 @@ body, html {
     margin: 10px;
     position: relative;
     display:block;
-    width:100%;
+    /* width:100%; */
 }
 
 @media screen and (max-width: 500px) {
