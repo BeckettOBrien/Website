@@ -40,8 +40,10 @@ function httpGetAsync(theUrl, callback) {
     xmlHttp.send(null);
 }
 
+const DISCORD_ID = "401875312578920458";
+
 function updateDiscordText() {
-    httpGetAsync("https://api.becketto.dev/getDiscordStatus?id=401875312578920458", (status) => {
+    httpGetAsync(`https://api.becketto.dev/getDiscordStatus?id=${DISCORD_ID}`, (status) => {
         document.getElementById("discordStatus").innerHTML = `Discord Status: ${status}`
     })
 }
@@ -49,9 +51,16 @@ function updateDiscordText() {
 function updateDiscordShield() {
     // If you would like to do this for yourself, make a request similar to this one with your own discord user id (you can also set an &color=)
     // Note: For this to work you must join this discord server (because there is no api endpoint for user status): https://discord.gg/ABM6w5dez9
-    httpGetAsync("https://api.becketto.dev/getDiscordShield?id=401875312578920458", (status) => {
+    httpGetAsync(`https://api.becketto.dev/getDiscordShield?id=${DISCORD_ID}`, (status) => {
         document.getElementById("discordStatus").src = status;
     })
+}
+
+var discordUpateInterval;
+function createDiscordUpdateInterval() {
+    discordUpateInterval = setInterval(() => {
+        updateDiscordShield();
+    }, 300000)
 }
 
 function textboxWriteln(str) {
@@ -80,7 +89,7 @@ function textboxWriteAnimatedWithChoices(str, choices) {
     const currentText = document.getElementById("centerText");
     const textContainer = document.getElementById("centerTextContainer");
     newText.className = "fadingin";
-    var body = str + "<div id='inline-choice-container'>";
+    var body = "<span id='centerTextText'>" + str + "</span><div id='inline-choice-container'>";
     for (choice of choices) {
         body += `<input type='image' src='${choice.src}' onclick='${choice.func.replace(/\'/g, '\x22')}' ${choice.id ? `id="${choice.id}"` : ''}>`;
     }
@@ -100,19 +109,11 @@ function textboxWriteAnimatedWithChoices(str, choices) {
 var speed;
 
 window.onload = () => {
-    // if (document.location.href === "https://becketto.dev/?dev") {
-    //     document.body.style = "";
-    //     updateDiscordShield();
-    // }
     speed = (document.location.href === "https://becketto.dev/?speed") || (document.location.href === "http://127.0.0.1:8080/?speed");
     build();
 }
 
 function build() {
-    // const blankPage = "<!-- Nerd. -->\n<p>Hi! I guess this is my website or something. I don't really know what to put here so for now its just text. Enjoy!</p>"
-    // document.body.innerHTML = blankPage;
-    // document.body.style = "";
-
     buildPhase1();
 }
 
@@ -181,9 +182,7 @@ function buildPhase1() {
                                                                                                     discordStatusNew.id = "discordStatus";
                                                                                                     discordStatusNew.classList.add(["link-img"]);
                                                                                                     discordStatusNew.setAttribute("onclick", "updateDiscordShield()");
-                                                                                                    setInterval(() => {
-                                                                                                        updateDiscordShield();
-                                                                                                    }, 300000)
+                                                                                                    createDiscordUpdateInterval();
                                                                                                     discordStatusOld.parentNode.replaceChild(discordStatusNew, discordStatusOld);
                                                                                                     updateDiscordShield();
                                                                                                     setTimeout(() => {
@@ -269,6 +268,7 @@ function buildPhase1() {
                                                                                                                                                                                                     setTimeout(() => {
                                                                                                                                                                                                         document.styleSheets.item(0).addRule("#inline-choice-container", "display: inline; vertical-align: middle;");
                                                                                                                                                                                                         document.styleSheets.item(0).addRule("input", "margin: 5px; outline: -webkit-focus-ring-color auto 1px;");
+                                                                                                                                                                                                        document.styleSheets.item(0).addRule("#centerTextText", "display: inline-block; padding: 10px;");
                                                                                                                                                                                                         textboxWriteAnimatedWithChoices("Here! Just pick the background you want --> ", [{ src:"https://img.shields.io/badge/particles-red?style=for-the-badge", func:"particleBackground()" }, { src:"https://img.shields.io/badge/matrix-green?style=for-the-badge", func:"matrixBackground()" }]);
                                                                                                                                                                                                     }, speed ? 10 : 4000);
                                                                                                                                                                                                     // particleBackground();
@@ -558,11 +558,34 @@ function getDomElementBounds(element) {
     }
 }
 
-function addElementToMatterJs(element, restitution = 0.2, newContainerId = 'matterjs-container') {
+// function addElementToMatterJs(element, restitution = 0.2, newContainerId = 'matterjs-container') {
+//     var bounds = getDomElementBounds(element);
+//     const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
+//     element.parentNode.removeChild(element);
+//     document.getElementById(newContainerId).appendChild(element);
+//     bounds = getDomElementBounds(element);
+//     object.label = element.id;
+//     object.restitution = restitution;
+//     objectProperties[element.id] = {
+//         x: bounds.x,
+//         y: bounds.y,
+//         width: bounds.width,
+//         height: bounds.height,
+//         object: object
+//     }
+//     World.add(world, object);
+//     return object;
+// }
+
+function gravitize(element, restitution = 0.2, circle=false) {
     var bounds = getDomElementBounds(element);
-    const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
-    element.parentNode.removeChild(element);
-    document.getElementById(newContainerId).appendChild(element);
+    var object;
+    if (circle) {
+        object = circle(bounds.x, bounds.y, bounds.width);
+    } else {
+        object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
+    }
+    if (!object) return;
     bounds = getDomElementBounds(element);
     object.label = element.id;
     object.restitution = restitution;
@@ -571,10 +594,19 @@ function addElementToMatterJs(element, restitution = 0.2, newContainerId = 'matt
         y: bounds.y,
         width: bounds.width,
         height: bounds.height,
-        object: object
+        body: object,
     }
     World.add(world, object);
     return object;
+}
+
+function solidify(element, reset=true) {
+    const object = objectProperties[element.id];
+    World.remove(world, object.body);
+    if (reset) {
+        element.style.removeProperty('transform');
+    }
+    delete objectProperties[element.id];
 }
 
 function pickThemeChoice(id) {
@@ -582,10 +614,11 @@ function pickThemeChoice(id) {
     buttonDom.onclick = '';
     const parent = buttonDom.parentNode.parentNode;
     const originalParentBounds = getDomElementBounds(parent);
-    addElementToMatterJs(buttonDom);
+    // addElementToMatterJs(buttonDom);
+    gravitize(buttonDom);
     const newParentBounds = getDomElementBounds(parent);
-    parent.style.transform = `translate(${(newParentBounds.width - originalParentBounds.width)/2}px, 0px)`;
-    Matter.Body.setAngularVelocity(objectProperties[id].object, -(Math.PI/115));
+    // parent.style.transform = `translate(${(newParentBounds.width - originalParentBounds.width)/2}px, 0px)`;
+    Matter.Body.setAngularVelocity(objectProperties[id].body, -(Math.PI/115));
     // var buttonBounds = getDomElementBounds(buttonDom);
     // const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
     // buttonDom.parentNode.removeChild(buttonDom);
@@ -606,11 +639,6 @@ function pickThemeChoice(id) {
 }
 
 async function initializeMatterJs() {
-    // const debugBlock = document.createElement('div');
-    // debugBlock.id = 'debug';
-    // document.body.appendChild(debugBlock);
-    // document.styleSheets.item(0).addRule("#debug", "position : absolute; z-index:-1; overflow: hidden;");
-
     const matterJs = document.createElement('script');
     matterJs.src = 'matter.js';
     const mainScriptLoaded = new Promise((resolve, reject) => {
@@ -619,14 +647,7 @@ async function initializeMatterJs() {
         }
     });
 
-    // const matterJsCanvas = document.createElement('canvas');
-    // matterJsCanvas.width = window.innerWidth;
-    // matterJsCanvas.height = window.innerHeight;
-    // matterJsCanvas.id = 'matterJsCanvas';
-    // document.styleSheets.item(0).addRule("#matterJsCanvas", "position : absolute; z-index:-1; overflow: hidden;");
-
     document.head.appendChild(matterJs);
-    // document.body.appendChild(matterJsCanvas);
     await mainScriptLoaded;
 
     Engine = Matter.Engine;
@@ -642,33 +663,10 @@ async function initializeMatterJs() {
     runner = Runner.create();
     Runner.run(engine, runner);
 
-    // const canvas = document.createElement('canvas');
-    // canvas.width = window.innerWidth;
-    // canvas.height = window.innerHeight;
-    // canvas.id = 'matterJsCanvas';
-    // document.styleSheets.item(0).addRule("#matterJsCanvas", "position : absolute; width:100%; height:100%; z-index:-1;");
-    // document.body.insertBefore(canvas, document.getElementById('vert-container'));
-
-    // render = Render.create({
-    //     engine: engine,
-    //     width: window.innerWidth,
-    //     height: window.innerHeight,
-    //     background: 'white',
-    //     canvas: canvas
-    // });
-    // Render.run(render);
-
     floor = wall(window.innerWidth/2, window.innerHeight + 5, window.innerWidth, 10);
     leftWall = wall(-5, window.innerHeight/2, 10, window.innerHeight);
     rightWall = wall(window.innerWidth + 5, window.innerHeight/2, 10, window.innerHeight);
     World.add(world, [floor, leftWall, rightWall]);
-
-    const particleContainer = document.createElement('div');
-    particleContainer.id = 'matterjs-container';
-    document.styleSheets.item(0).addRule("#matterjs-container", `position : absolute; width:100%; height:100%; z-index:2; pointer-events: none;`);
-    document.styleSheets.item(0).addRule("#matterjs-container > *", "pointer-events: auto;");
-    document.setAngularVelocity
-    document.body.insertBefore(particleContainer, document.getElementById("vert-container"));
 
     renderInterval = setInterval(drawDom, 5);
 
@@ -679,75 +677,104 @@ async function initializeMatterJs() {
         }
         //console.log(mouse);
     }
-    
+
+    clearInterval(discordUpateInterval);
+    document.getElementById('discordStatus').onclick = '';
 }
 
 function drawDom() {
     world.bodies.forEach((body) => {
         const bodyDom = document.getElementById(body.label);
         if (!bodyDom) return;
-        bodyDom.style.transform = `translate(${body.position.x - objectProperties[body.label].x}px, ${body.position.y - objectProperties[body.label].y}px) rotate(${body.angle}rad)`;
-        // clearInterval(renderInterval);
-        // console.log(body);
+        if (!objectProperties[body.label]) return;
+        newX = body.position.x - objectProperties[body.label].x;
+        newY = body.position.y - objectProperties[body.label].y;
+        bodyDom.style.transform = `translate(${newX}px, ${newY}px) rotate(${body.angle}rad)`;
     });
 }
 
+function getFirstMJSChildren(node) {
+    out = [];
+    node.childNodes.forEach((n) => {
+        if (objectProperties[n.id]) {
+            return out.push(n);
+        }
+        if (n.childNodes.length == 0) {
+            return;
+        }
+        return out.push(getFirstMJSChildren(n));
+    })
+    return out;
+}
+
 function crash() {
-    rect_fall_ids = ["heading", "centerText", "gh-link", "discordStatus"];
+    rect_fall_ids = ["heading", "gh-link", "discordStatus", "theme-choice-modern", "theme-choice-industrial", "centerTextText"];
+    circle_fall_ids = ["profilePicture"];
+
     rect_fall_ids.forEach((id) => {
-        const node = document.getElementById(id);
-        const bounds = getDomElementBounds(node);
-        if (node.nodeName == "P") {
-            bounds.height += 15;
-        }
-        const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
-        object.label = id;
-        object.restitution = 0.2;
-        objectProperties[id] = {
-            x: bounds.x,
-            y: bounds.y,
-            width: bounds.width,
-            height: bounds.height
-        }
-        World.add(world, object);
+        if (objectProperties[id]) return;
+        gravitize(document.getElementById(id));
     });
 
-    // This is awful. Someone please make me fix this
-    document.getElementById("centerText").childNodes.item(1).childNodes.forEach((node) => {
-        if (node.nodeName == "INPUT") {
-            const buttonDom = node;
-            buttonDom.onclick = '';
-            var buttonBounds = getDomElementBounds(buttonDom);
-            const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
-            buttonDom.parentNode.removeChild(buttonDom);
-            document.getElementById('matterjs-container').appendChild(buttonDom);
-            buttonBounds = getDomElementBounds(buttonDom);
-            buttonObject.label = node.id;
-            buttonObject.restitution = 0.2;
-            objectProperties[node.id] = {
-                x: buttonBounds.x,
-                y: buttonBounds.y,
-                width: buttonBounds.width,
-                height: buttonBounds.height
-            }
-
-            World.add(world, [buttonObject]);
-        }
-    })
-
-    circle_fall_ids = ["profilePicture"];
     circle_fall_ids.forEach((id) => {
-        const node = document.getElementById(id);
-        const bounds = getDomElementBounds(node);
-        const object = circle(bounds.x, bounds.y, bounds.width/2);
-        object.label = id;
-        object.restitution = 0.2;
-        objectProperties[id] = {
-            x: bounds.x,
-            y: bounds.y,
-            width: bounds.width,
-            height: bounds.height
-        }
-        World.add(world, object);
-    })
+        if (objectProperties[id]) return;
+        gravitize(document.getElementById(id), circle=true);
+    });
+
+    // rect_fall_ids.forEach((id) => {
+    //     const node = document.getElementById(id);
+    //     const bounds = getDomElementBounds(node);
+    //     if (node.nodeName == "P") {
+    //         bounds.height += 15;
+    //     }
+    //     const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
+    //     object.label = id;
+    //     object.restitution = 0.2;
+    //     objectProperties[id] = {
+    //         x: bounds.x,
+    //         y: bounds.y,
+    //         width: bounds.width,
+    //         height: bounds.height
+    //     }
+    //     World.add(world, object);
+    // });
+
+    // // This is awful. Someone please make me fix this
+    // document.getElementById("centerText").childNodes.item(1).childNodes.forEach((node) => {
+    //     if (node.nodeName == "INPUT") {
+    //         const buttonDom = node;
+    //         buttonDom.onclick = '';
+    //         var buttonBounds = getDomElementBounds(buttonDom);
+    //         const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
+    //         buttonDom.parentNode.removeChild(buttonDom);
+    //         document.getElementById('matterjs-container').appendChild(buttonDom);
+    //         buttonBounds = getDomElementBounds(buttonDom);
+    //         buttonObject.label = node.id;
+    //         buttonObject.restitution = 0.2;
+    //         objectProperties[node.id] = {
+    //             x: buttonBounds.x,
+    //             y: buttonBounds.y,
+    //             width: buttonBounds.width,
+    //             height: buttonBounds.height
+    //         }
+
+    //         World.add(world, [buttonObject]);
+    //     }
+    // })
+
+    // circle_fall_ids = ["profilePicture"];
+    // circle_fall_ids.forEach((id) => {
+    //     const node = document.getElementById(id);
+    //     const bounds = getDomElementBounds(node);
+    //     const object = circle(bounds.x, bounds.y, bounds.width/2);
+    //     object.label = id;
+    //     object.restitution = 0.2;
+    //     objectProperties[id] = {
+    //         x: bounds.x,
+    //         y: bounds.y,
+    //         width: bounds.width,
+    //         height: bounds.height
+    //     }
+    //     World.add(world, object);
+    // })
 }
