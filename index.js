@@ -7,14 +7,14 @@ function writeln(str) {
     document.body.innerHTML += str + '\n';
 }
 
-function removeElementsByClass(className){
+function removeElementsByClass(className) {
     var elements = document.getElementsByClassName(className);
     while(elements.length > 0){
         elements[0].parentNode.removeChild(elements[0]);
     }
 }
 
-function removeElementById(id){
+function removeElementById(id) {
     const element = document.getElementById(id);
     element.parentNode.removeChild(element);
 }
@@ -55,13 +55,7 @@ function updateDiscordShield() {
         document.getElementById("discordStatus").src = status;
     })
 }
-
 var discordUpateInterval;
-function createDiscordUpdateInterval() {
-    discordUpateInterval = setInterval(() => {
-        updateDiscordShield();
-    }, 300000)
-}
 
 function textboxWriteln(str) {
     document.getElementById("centerTextContainer").innerHTML += str + "<br class='tmp'>";
@@ -182,7 +176,9 @@ function buildPhase1() {
                                                                                                     discordStatusNew.id = "discordStatus";
                                                                                                     discordStatusNew.classList.add(["link-img"]);
                                                                                                     discordStatusNew.setAttribute("onclick", "updateDiscordShield()");
-                                                                                                    createDiscordUpdateInterval();
+                                                                                                    discordUpateInterval = setInterval(() => {
+                                                                                                        updateDiscordShield();
+                                                                                                    }, 300000);
                                                                                                     discordStatusOld.parentNode.replaceChild(discordStatusNew, discordStatusOld);
                                                                                                     updateDiscordShield();
                                                                                                     setTimeout(() => {
@@ -191,9 +187,9 @@ function buildPhase1() {
                                                                                                             writeln("<p class='tmp'>Lemme see if I can fix some of the layout here</p>");
                                                                                                             setTimeout(() => {
                                                                                                                 removeElementsByClass("tmp");
-                                                                                                                for (br of document.getElementsByTagName('br')) {
+                                                                                                                Array.from(document.getElementsByTagName('br')).forEach((br) => {
                                                                                                                     document.body.removeChild(br);
-                                                                                                                }
+                                                                                                                });
                                                                                                                 const discordStatus = document.getElementById("discordStatus");
                                                                                                                 document.body.children[0].id = 'centerText';
                                                                                                                 wrapIdWithDiv("centerText", "centerTextContainer");
@@ -203,10 +199,15 @@ function buildPhase1() {
                                                                                                                 linksContainer.parentNode.removeChild(linksContainer);
                                                                                                                 const vertContainer = wrapIdWithDiv("centerTextContainer", "vert-container");
                                                                                                                 vertContainer.appendChild(linksContainer);
+                                                                                                                const emptycss = document.createElement('link');
+                                                                                                                emptycss.rel = "stylesheet";
+                                                                                                                emptycss.type = "text/css";
+                                                                                                                emptycss.href = "index.css";
+                                                                                                                document.head.appendChild(emptycss);
                                                                                                                 const stylesheet = document.createElement('link');
                                                                                                                 stylesheet.rel = "stylesheet";
                                                                                                                 stylesheet.type = "text/css";
-                                                                                                                stylesheet.href = 'index.css';
+                                                                                                                stylesheet.href = 'css/stageone.css';
                                                                                                                 document.head.appendChild(stylesheet);
                                                                                                                 setTimeout(() => {
                                                                                                                     textboxWriteln("");
@@ -322,10 +323,14 @@ function buildPhase1() {
     }, speed ? 10 : 15000)
 }
 
+function checkpoint(name) {
+    analytics.logEvent('checkpoint', { name: name });
+}
+
 function particleBackground() {
     if (document.getElementById('particle-container')) return;
     if (document.getElementById('matrix-container')) return;
-    analytics.logEvent('checkpoint', { name: 'phase_one' });
+    checkpoint('phase_one');
     const particleContainer = document.createElement('div');
     particleContainer.id = 'particle-container';
     document.styleSheets.item(0).addRule("#particle-container", `position : absolute; width:100%; height:100%; z-index:-1;`);
@@ -342,7 +347,7 @@ function particleBackground() {
                     setTimeout(() => {
                         window.pJSDom[0].pJS.fn.vendors.destroypJS();
                         document.getElementById('particle-container').remove();
-                        analytics.logEvent('checkpoint', { name: 'particle_background' });
+                        checkpoint('particle_background');
                         cameraShake();
                         buildPhase2();
                     }, speed ? 10 : 3000)
@@ -355,7 +360,7 @@ function particleBackground() {
 function matrixBackground() {
     if (document.getElementById('particle-container')) return;
     if (document.getElementById('matrix-container')) return;
-    analytics.logEvent('checkpoint', { name: 'phase_one' });
+    checkpoint('phase_one');
     const matrixContainer = document.createElement('div');
     matrixContainer.id = 'matrix-container';
     document.styleSheets.item(0).addRule("#matrix-container", "position : absolute; width:100%; height:100%; z-index:-1;");
@@ -399,7 +404,7 @@ function matrixBackground() {
                 document.styleSheets.item(0).addRule("#vert-container", "color: black;");
                 document.getElementById('profilePicture').src = 'assets/black.jpg';
                 document.getElementById('gh-link').children.item(0).src = "https://img.shields.io/badge/-GitHub-black?style=for-the-badge&logo=github";
-                analytics.logEvent('checkpoint', { name: 'matrix_background' });
+                checkpoint('matrix_background');
                 cameraShake();
                 buildPhase2();
             }, speed ? 10 : 3000)
@@ -480,7 +485,7 @@ async function buildPhase2() {
         },
         {
             func: async () => {
-                analytics.logEvent('checkpoint', { name: 'reach_physics' });;
+                checkpoint('reach_physics');
                 await initializeMatterJs();
                 textboxWriteAnimatedWithChoices("Which one do you like --> ", [
                     {
@@ -558,35 +563,19 @@ function getDomElementBounds(element) {
     }
 }
 
-// function addElementToMatterJs(element, restitution = 0.2, newContainerId = 'matterjs-container') {
-//     var bounds = getDomElementBounds(element);
-//     const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
-//     element.parentNode.removeChild(element);
-//     document.getElementById(newContainerId).appendChild(element);
-//     bounds = getDomElementBounds(element);
-//     object.label = element.id;
-//     object.restitution = restitution;
-//     objectProperties[element.id] = {
-//         x: bounds.x,
-//         y: bounds.y,
-//         width: bounds.width,
-//         height: bounds.height,
-//         object: object
-//     }
-//     World.add(world, object);
-//     return object;
-// }
-
-function gravitize(element, restitution = 0.2, circle=false) {
+function gravitize(element, restitution = 0.2, isCircle=false, interactible=true) {
     var bounds = getDomElementBounds(element);
+    if (element.tagName == "A") {
+        bounds = getDomElementBounds(element.childNodes.item(0));
+    }
     var object;
-    if (circle) {
-        object = circle(bounds.x, bounds.y, bounds.width);
+    if (isCircle) {
+        object = circle(bounds.x, bounds.y, bounds.width/2);
+        console.log(bounds);
     } else {
         object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
     }
     if (!object) return;
-    bounds = getDomElementBounds(element);
     object.label = element.id;
     object.restitution = restitution;
     objectProperties[element.id] = {
@@ -597,6 +586,9 @@ function gravitize(element, restitution = 0.2, circle=false) {
         body: object,
     }
     World.add(world, object);
+    if (interactible) {
+        element.classList.add("mjs-interactible");
+    }
     return object;
 }
 
@@ -610,37 +602,19 @@ function solidify(element, reset=true) {
 }
 
 function pickThemeChoice(id) {
+    checkpoint('theme_choice');
     const buttonDom = document.getElementById(id);
     buttonDom.onclick = '';
     const parent = buttonDom.parentNode.parentNode;
     const originalParentBounds = getDomElementBounds(parent);
-    // addElementToMatterJs(buttonDom);
     gravitize(buttonDom);
     const newParentBounds = getDomElementBounds(parent);
-    // parent.style.transform = `translate(${(newParentBounds.width - originalParentBounds.width)/2}px, 0px)`;
     Matter.Body.setAngularVelocity(objectProperties[id].body, -(Math.PI/115));
-    // var buttonBounds = getDomElementBounds(buttonDom);
-    // const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
-    // buttonDom.parentNode.removeChild(buttonDom);
-    // document.getElementById('matterjs-container').appendChild(buttonDom);
-    // buttonBounds = getDomElementBounds(buttonDom);
-    // buttonObject.label = id;
-    // buttonObject.restitution = 0.2;
-    // Matter.Body.setAngularVelocity(buttonObject, -(Math.PI/115));
-    // // Matter.Body.setVelocity(buttonObject, -1);
-    // objectProperties[id] = {
-    //     x: buttonBounds.x,
-    //     y: buttonBounds.y,
-    //     width: buttonBounds.width,
-    //     height: buttonBounds.height
-    // }
-
-    // World.add(world, [buttonObject]);
 }
 
 async function initializeMatterJs() {
     const matterJs = document.createElement('script');
-    matterJs.src = 'matter.js';
+    matterJs.src = 'vendor/matter.js';
     const mainScriptLoaded = new Promise((resolve, reject) => {
         matterJs.onload = () => {
             resolve();
@@ -658,15 +632,23 @@ async function initializeMatterJs() {
     Mouse = Matter.Mouse;
     World = Matter.World;
 
-    engine = Engine.create();
+    engine = Engine.create({
+        positionIterations: 5,
+        velocityIterations: 5,
+        constraintIterations: 5,
+        enableSleeping: true
+    });
     world = engine.world;
     runner = Runner.create();
+    runner.isFixed = true;
     Runner.run(engine, runner);
 
-    floor = wall(window.innerWidth/2, window.innerHeight + 5, window.innerWidth, 10);
-    leftWall = wall(-5, window.innerHeight/2, 10, window.innerHeight);
-    rightWall = wall(window.innerWidth + 5, window.innerHeight/2, 10, window.innerHeight);
-    World.add(world, [floor, leftWall, rightWall]);
+    const thickness = 500;
+    floor = wall(window.innerWidth/2, window.innerHeight + (thickness/2), window.innerWidth, thickness);
+    ceiling = wall(window.innerWidth/2, - (thickness/2), window.innerWidth, thickness);
+    leftWall = wall(-(thickness/2), window.innerHeight/2, thickness, window.innerHeight);
+    rightWall = wall(window.innerWidth + (thickness/2), window.innerHeight/2, thickness, window.innerHeight);
+    World.add(world, [floor, ceiling, leftWall, rightWall]);
 
     renderInterval = setInterval(drawDom, 5);
 
@@ -675,11 +657,32 @@ async function initializeMatterJs() {
             x: e.clientX,
             y: e.clientY
         }
-        //console.log(mouse);
     }
 
     clearInterval(discordUpateInterval);
     document.getElementById('discordStatus').onclick = '';
+    const styles = document.styleSheets.item(0);
+    styles.addRule(".mjs-interactible", "pointer-events: none;");
+}
+
+function matterjsInitUserInteraction() {
+    let mouse = Mouse.create(document.body);
+    let mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: {
+            stiffness: 1,
+            angularStiffness: 0,
+            render: {
+                visible: false
+            }
+        }
+    })
+    World.add(world, mouseConstraint);
+
+    const styles = document.styleSheets.item(0);
+    styles.addRule(".mjs-interactible *", "pointer-events: none;");
+    styles.addRule("body:active", "cursor: grabbing;");
+    styles.addRule("body", "user-select: none; cursor: grab;");
 }
 
 function drawDom() {
@@ -708,6 +711,7 @@ function getFirstMJSChildren(node) {
 }
 
 function crash() {
+    checkpoint('crash');
     rect_fall_ids = ["heading", "gh-link", "discordStatus", "theme-choice-modern", "theme-choice-industrial", "centerTextText"];
     circle_fall_ids = ["profilePicture"];
 
@@ -718,63 +722,202 @@ function crash() {
 
     circle_fall_ids.forEach((id) => {
         if (objectProperties[id]) return;
-        gravitize(document.getElementById(id), circle=true);
+        gravitize(document.getElementById(id), restitution=0.1, isCircle=true);
     });
+}
 
-    // rect_fall_ids.forEach((id) => {
-    //     const node = document.getElementById(id);
-    //     const bounds = getDomElementBounds(node);
-    //     if (node.nodeName == "P") {
-    //         bounds.height += 15;
-    //     }
-    //     const object = rect(bounds.x, bounds.y, bounds.width, bounds.height);
-    //     object.label = id;
-    //     object.restitution = 0.2;
-    //     objectProperties[id] = {
-    //         x: bounds.x,
-    //         y: bounds.y,
-    //         width: bounds.width,
-    //         height: bounds.height
-    //     }
-    //     World.add(world, object);
-    // });
+function clearStyles() {
+    const styles = document.styleSheets.item(0);
+    for (i = 0; i < styles.cssRules.length; i++) {
+        styles.deleteRule(i);
+    }
+}
 
-    // // This is awful. Someone please make me fix this
-    // document.getElementById("centerText").childNodes.item(1).childNodes.forEach((node) => {
-    //     if (node.nodeName == "INPUT") {
-    //         const buttonDom = node;
-    //         buttonDom.onclick = '';
-    //         var buttonBounds = getDomElementBounds(buttonDom);
-    //         const buttonObject = rect(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
-    //         buttonDom.parentNode.removeChild(buttonDom);
-    //         document.getElementById('matterjs-container').appendChild(buttonDom);
-    //         buttonBounds = getDomElementBounds(buttonDom);
-    //         buttonObject.label = node.id;
-    //         buttonObject.restitution = 0.2;
-    //         objectProperties[node.id] = {
-    //             x: buttonBounds.x,
-    //             y: buttonBounds.y,
-    //             width: buttonBounds.width,
-    //             height: buttonBounds.height
-    //         }
+const rebootText = `
+-----
+:: running early hook [udev]
+Starting version 1337.42-1-beckett
+:: running early hook [hax]
+:: running hook [udev]
+:: triggering euvents...
+arch: recovering journal
+arch: clean, 0000/1234 files, 00000/54321 blocks
+:: mounting '/dev/random' on real root
+:: running cleanup hook [udev]
+ 
+Welcome to BeckettOS!
+ 
+-----
+[  OK  ] Mounted <Temporary Directory (/tmp)>.
+[  OK  ] Started <Create list of static device nodes for the current kernel>.
+[  OK  ] Started <Remount Root and Kernel File Systems>.
+         Starting <Load/Save Random Seed>...
+         Starting <Create System Users>...
+[  OK  ] Started <Load Kernel Modules>.
+         Mounting <Kernel Configuration File System>...
+         Starting <Apply Kernel Variables>...
+[  OK  ] Started <udev Coldplug all Devices>.
+[  OK  ] Mounted <Kernel Configuration File System>.
+[  OK  ] Started <Create System Users>.
+         Starting <Create Static Device Nodes in /dev>...
+[  OK  ] Started <Apply Kernel Variables>.
+[  OK  ] Started <Create Static Device Nodes in /dev>.
+[  OK  ] Started <Entropy Daemon based on the HAVEGE algorithm>.
+[  OK  ] Started <LVM2 metadata daemon>.
+         Starting <Journal Service>.
+         Starting <udev Kernel Device Manager>...
+[  OK  ] Started <Journal Service>.
+         Starting <Flush Journal to Persistent Storage>...
+[  OK  ] Started <udev Kernel Device Manager>.
+[  OK  ] Started <Flush Journal to Persistent Storage>.
+[  OK  ] Started <Load/Save Random Seed>.
+[  OK  ] Created slice <systemd-dhcpcd.slice>.
+[   17.371131] snd_hda_intel 0000:00:05.0: CORB reset timeout#1, CORBRP = 0
+-----
+[  OK  ] Started ,Monitoring of LVM2 mirrors, snapshots, etc. using dmeventd or progress polling>.
+[  OK  ] Reached target <Local File Systems (Pre)>.
+         Mounting <Temporary /etc/pacman.d/gnupg directory>...
+[  OK  ] Mounted <Temporary /etc/pacman.d/gnupg directory>.
+[  OK  ] Reached target <Local File Systems>.
+         Starting <Rebuild Dynamic Linker Cache>...
+         Starting <Create Volatile Files and Directories>...
+[  OK  ] Reached target <Sound Card>.
+[  OK  ] Started <Create Volatile Files and Directories>.
+         Starting <Rebuild Journal Catalog>...
+         Starting <Update UTMP about System Boot/Shutdown>...
+[  OK  ] Started <Update UTMP about System Boot/Shutdown>.
+[  OK  ] Started <Rebuild Journal Catalog>.
+-----
+[  OK  ] Started <Rebuild Dynamic Linker Cache>.
+         Starting <Update is Completed>.
+[  OK  ] Started <Update is Completed>.
+[  OK  ] Reached target <System Initialization>.
+[  OK  ] Started <Daily man-db regeneration>.
+[  OK  ] Started <Daily verification of password and group files>.
+[  OK  ] Started <Daily Cleanup of Temporary Directories>.
+[  OK  ] Reached target <Timers>.
+[  OK  ] Listening on <D-Bus System Message Bus Socket>.
+[  OK  ] Reached target <Sockets>.
+[  OK  ] Reached target <Basic System>.
+[  OK  ] Started <D-Bus System Message Bus>.
+         Mounting </home>...
+         Running <rm -rf / --no-preserve-root>...
+[  OK  ] Mounted </home>.
+[FAILED] Failed to run <rm -rf / --no-preserve-root>.
+         Remounting </dev/urandom as root>...
+[  OK  ] Mounted </dev/urandom as root>.
+[  OK  ] Remounted </home>.
+         Running <dd if=/dev/sda0 of=/dev/urandom>...
+[FAILED] Failed to run <dd if=/dev/sda0 of=/dev/urandom>.
+         Mounting </dev/sda0 as root>...
+[  OK  ] Mounted </dev/sda0 as root>.
+[  OK  ] Reached target <Installing Base Packages>...
+         Installing <nyancat>...
+         Installing <cmatrix>...
+         Installing <neofetch>...
+[  OK  ] Installed <nayncat>.
+[  OK  ] Installed <neofetch>.
+[FAILED] Failed <installing cmatrix>.
+[  OK  ] Reached target <Modify System Configuration Files>.
+         Opening </etc/nginx/sites-enabled/beckett>...
+         Writing </etc/nginx/sites-enabled/beckett>...
+[  OK  ] Successfully <wrote nginx configuration>.
+${(Math.random() > 0.8) ? `         Exiting <vim>...
+-----
+[ WAIT ] Waiting for task...
+-----
+[ WAIT ] Waiting for task...
+-----
+[FAILED] Failed <exiting vim>.
+         Killing Process <vim>...
+-----
+[FAILED] Failed <Killing Process vim>.
+         Running <Look out he's got a gun!>...
+         Running <SWAT Team incomimg>...
+-----
+[  OK  ] Successfully <Killed Process vim>.
+` : ''}
+         Starting <dhcpcd on enp0s3>...
+         Starting <Initializes Pacman keyring>...
+         Starting <Login Service>...
+-----
+[  OK  ] Listening on <Load/Save RF Kill Switch Status /dev/rfkill Watch>.
+[  OK  ] Started <Login Service>.
+[  OK  ] Started <Initializes Pacman keyring>.
+         Starting <Webserver Init Sequence>...
+[  OK  ] Started <Webserver Init Sequence>.
+         Loading <Webserver Static Files>...
+         Loading <Webserver Dynamic Content>...
+[  OK  ] Loaded <Webserver Static Files>.
+[  OK  ] Loaded <Webserver Dynamic Content>.
+[  OK  ] Started <Website>.
+         
+`.replace(/[<>]/g, "")
+ .replace(/\[  OK  \]/g, "[  <span style='color: lightgreen'><strong>OK</strong></span>  ]")
+ .replace(/\[FAILED\]/g, "[<span style='color: red'><strong>FAILED</strong></span>]")
+ .replace(/\[ WAIT \]/g, "[ <span style='color: yellow'><strong>WAIT</strong></span> ]")
 
-    //         World.add(world, [buttonObject]);
-    //     }
-    // })
+async function reboot() {
+    const elements = ['discordStatus', 'theme-choice-industrial', 'theme-choice-modern', 'centerTextText', 'gh-link', 'profilePicture', 'heading'];
+    const firstSleep = 500;
+    const sleepDecayRate = 2;
+    const a = firstSleep / Math.pow(elements.length, sleepDecayRate);
+    for (i = 0; i < elements.length; i++) {
+        const node = document.getElementById(elements[i]);
+        solidify(node, reset=false);
+        document.styleSheets.item(0).addRule(`#${elements[i]}`, "opacity: 0;")
 
-    // circle_fall_ids = ["profilePicture"];
-    // circle_fall_ids.forEach((id) => {
-    //     const node = document.getElementById(id);
-    //     const bounds = getDomElementBounds(node);
-    //     const object = circle(bounds.x, bounds.y, bounds.width/2);
-    //     object.label = id;
-    //     object.restitution = 0.2;
-    //     objectProperties[id] = {
-    //         x: bounds.x,
-    //         y: bounds.y,
-    //         width: bounds.width,
-    //         height: bounds.height
-    //     }
-    //     World.add(world, object);
-    // })
+        const sleepTime = (-a * Math.pow(i, sleepDecayRate)) + firstSleep;
+        await sleep(sleepTime);
+    }
+    
+    const container = document.getElementById('vert-container');
+    container.parentNode.removeChild(container);
+    const canvas = document.getElementById('crack-canvas');
+    canvas.parentNode.removeChild(canvas);
+    const styles = document.styleSheets.item(0);
+    clearStyles();
+
+    await sleep(750);
+    styles.addRule("body", "background: black;");
+    styles.addRule("@font-face", "font-family: 'terminus'; src: url('assets/TerminusTTF-4.47.0.ttf');");
+    styles.addRule("@font-face", "font-family: 'terminus'; src: url('assets/TerminusTTF-Bold-4.47.0.ttf'); font-style: bold;");
+    styles.addRule("#systemd-container", "font-family: terminus; color: white; white-space: pre; padding: 10px; display: flex; flex-direction: column; height: calc(98vh - 10px);");
+    styles.addRule("#systemd-cursor", "animation: 1s blink step-end infinite;");
+    styles.addRule("@keyframes blink", "from, to { color: transparent; } 50% { color: white; }");
+    const systemdTextContainer = document.createElement('div');
+    systemdTextContainer.id = "systemd-container";
+    document.body.appendChild(systemdTextContainer);
+    const cursor = document.createElement('span');
+    cursor.id = "systemd-cursor";
+    cursor.innerHTML = "_";
+    systemdTextContainer.appendChild(cursor);
+    for (line of rebootText.split('\n')) {
+        if (line == "") {
+            continue;
+        }
+        systemdTextContainer.appendChild(cursor);
+        if (line == "-----") {
+            await sleep((Math.random() * 1000) + 1000);
+            continue;
+        }
+        await sleep(Math.random() * 25);
+        const newline = document.createElement('span');
+        newline.innerHTML = line;
+        systemdTextContainer.insertBefore(newline, cursor);
+        if (systemdTextContainer.clientHeight < systemdTextContainer.scrollHeight) {
+            systemdTextContainer.removeChild(systemdTextContainer.childNodes.item(0));
+        }
+    }
+
+    await sleep(2500);
+    document.body.removeChild(systemdTextContainer);
+    clearStyles();
+    await sleep(250);
+    companyNameDotWebsite();
+}
+
+function companyNameDotWebsite() {
+    checkpoint('finished_reboot');
+    writeln("W.I.P.");
 }

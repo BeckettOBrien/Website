@@ -1,3 +1,5 @@
-I finally found a better way to just get DOM elements to fall. I would've liked to be able to make parents fall but it started getting really complicated.
-It's been really difficult to get motivated to work on anything recently, but I'm really happy to finally be working on this again.
-I still have some cleanup to do, like removing commented or unused code, and some matter.js issues to fix (things sometimes glitch through the floor and don't settle down when they should stop moving) but I'm happy with it for now.
+I have a little bit of an idea of what I'm going to add next, but not much beyond that.
+It's been really difficult stringing together certain things because I kinda worked on things out of order.
+Like, I started the reboot scrolling text thingy before I added user interaction for the matter-js part.
+And I still haven't figured out how I'm getting to the crash from the first button falling.
+At least I got the matter-js stuff fairly polished now (somehow I was using a version 0.12 release instead of the latest).
